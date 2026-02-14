@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Will You Be My Valentine?</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Core Layout & Background --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Pure CSS Floating Hearts (Better Performance) */
+        .bg-hearts { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+        .heart-bg {
+            position: absolute;
+            bottom: -50px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            transform: rotate(45deg);
+            animation: floatUp linear infinite;
+        }
+        .heart-bg::before, .heart-bg::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: inherit;
+            border-radius: 50%;
+        }
+        .heart-bg::before { top: -10px; left: 0; }
+        .heart-bg::after { left: -10px; top: 0; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(45deg) scale(0.8); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-120vh) rotate(45deg) scale(1.2); opacity: 0; }
+        }
+
+        /* --- Glass Card --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border-radius: 30px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 450px;
+            min-height: 550px; /* Fixed height to let button run */
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align top so elements don't jump */
+            transition: transform 0.3s ease, opacity 0.5s ease;
+        }
+
+        /* --- Typography --- */
+        .title-font {
+            font-family: 'Pacifico', cursive;
+            background: linear-gradient(to right, #e11d48, #db2777);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(244, 63, 94, 0.2));
+            line-height: 1.3;
+        }
+
+        /* --- Bear Sticker --- */
+        .bear-container { height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+        .bear-container img {
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .bear-container:hover img { transform: scale(1.1) rotate(5deg); }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 0.8rem 2.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute; /* Essential for movement */
+            white-space: nowrap;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-yes {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            color: white;
+            z-index: 20;
+            /* Initial Position: Centered horizontally, slightly lower */
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-160%); /* Move left of center */
+        }
+
+        .btn-no {
+            background: white;
+            color: #ff4b2b;
+            border: 2px solid #ff4b2b;
+            z-index: 30;
+            /* Initial Position */
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(60%); /* Move right of center */
+        }
+
+        /* --- Countdown Overlay --- */
+        #countdown-layer {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .count-num {
+            font-size: 8rem; color: white; font-weight: bold; font-family: 'Pacifico', cursive;
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* --- Utility --- */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Background Hearts -->
+    <div class="bg-hearts" id="bgHearts"></div>
+
+    <!-- 2. Countdown Layer -->
+    <div id="countdown-layer">
+        <div id="count-text" class="count-num">3</div>
+    </div>
+
+    <!-- 3. Main Card -->
+    <div class="glass-card hidden" id="mainCard">
+        <div class="bear-container pointer-events-none">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2QzYnZ5eW82bWJ5ZGV4OXV3Ynd4bm45bmF4bXc2Z254Z254Z254ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/iCVzZwwE6QNAV2tEE0/giphy.gif" alt="Bear">
+        </div>
+
+        <h1 class="title-font text-4xl md:text-5xl mb-2 text-center pointer-events-none">Will you be my</h1>
+        <h1 class="title-font text-5xl md:text-6xl mb-6 text-center pointer-events-none">Valentine? 🌹</h1>
+        <p class="text-gray-600 mb-8 font-medium italic text-center pointer-events-none">"Every moment with you is magic..."</p>
+
+        <!-- Buttons are absolute positioned inside the card -->
+        <button id="yesBtn" class="btn btn-yes">YES 😍</button>
+        <button id="noBtn" class="btn btn-no">No 😢</button>
+    </div>
+
+    <!-- 4. Celebration Layer -->
+    <div id="celebration" class="hidden fixed inset-0 flex flex-col items-center justify-center z-50 p-4 bg-white/80 backdrop-blur-md">
+        <div class="glass-card !min-height-0 !h-auto flex flex-col items-center justify-center p-8 bg-white" style="transform: scale(1);">
+            <img src="https://media.giphy.com/media/26FLdmIp6wJr91JAI/giphy.gif" class="h-40 mb-4">
+            <h1 class="title-font text-5xl text-pink-600 mb-2">YAAAY! ❤️</h1>
+            <p class="text-lg text-gray-700 font-semibold mb-4">I knew you'd say yes!</p>
+            <div class="bg-pink-50 p-6 rounded-2xl text-center italic text-gray-800 border border-pink-100 shadow-inner">
+                "Roses are red, violets are blue,<br>
+                My heart beats only for you.<br>
+                I'm the luckiest person, it's true,<br>
+                To have a Valentine as cute as you! ❤️"
+            </div>
+        </div>
+        <canvas id="confetti" class="absolute inset-0 pointer-events-none"></canvas>
+    </div>
+
+    <script>
+        /* --- Logic 1: Background Hearts Generator (CSS based) --- */
+        const bg = document.getElementById("bgHearts");
+        setInterval(() => {
+            const h = document.createElement("div");
+            h.classList.add("heart-bg");
+            h.style.left = Math.random() * 100 + "vw";
+            h.style.animationDuration = (Math.random() * 5 + 6) + "s"; // 6-11s
+            h.style.width = h.style.height = (Math.random() * 20 + 15) + "px"; // Random size
+            bg.appendChild(h);
+            setTimeout(() => h.remove(), 11000); // Cleanup
+        }, 500);
+
+        /* --- Logic 2: Countdown & Intro --- */
+        const countLayer = document.getElementById('countdown-layer');
+        const countText = document.getElementById('count-text');
+        const mainCard = document.getElementById('mainCard');
+        let count = 3;
+
+        const timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countText.innerText = count;
+                // Retrigger animation
+                countText.style.animation = 'none';
+                countText.offsetHeight; /* trigger reflow */
+                countText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            } else {
+                clearInterval(timer);
+                countLayer.style.transition = 'opacity 0.5s';
+                countLayer.style.opacity = '0';
+                setTimeout(() => countLayer.remove(), 500);
+                mainCard.classList.remove('hidden');
+            }
+        }, 1000);
+
+        /* --- Logic 3: The Runaway Button & Growing YES --- */
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        let yesScale = 1;
+
+        // Reset positions initially to be relative to the card properly
+        // We use JS to set initial styles so we can manipulate them easily later
+        // Center-ish logic logic applied in CSS via bottom/left/transform
+
+        const moveNoButton = (mouseX, mouseY) => {
+            const cardRect = mainCard.getBoundingClientRect();
+            const btnRect = noBtn.getBoundingClientRect();
+
+            // Mouse relative to Card
+            const mouseXRel = mouseX - cardRect.left;
+            const mouseYRel = mouseY - cardRect.top;
+
+            // Button Center relative to Card
+            // Since we use transform on the button, offsetLeft might be static.
+            // Let's rely on getBoundingClientRect relative to cardRect.
+            const btnXRel = btnRect.left - cardRect.left + btnRect.width / 2;
+            const btnYRel = btnRect.top - cardRect.top + btnRect.height / 2;
+
+            const dist = Math.sqrt(Math.pow(mouseXRel - btnXRel, 2) + Math.pow(mouseYRel - btnYRel, 2));
+
+            // If mouse is within 150px
+            if (dist < 150) {
+                // 1. Teleport Logic (Snippet Style) - Random position inside card
+                // Safe padding
+                const padding = 20;
+                const maxX = cardRect.width - btnRect.width - padding;
+                const maxY = cardRect.height - btnRect.height - padding;
+
+                const randomX = Math.random() * (maxX - padding) + padding;
+                const randomY = Math.random() * (maxY - padding) + padding;
+
+                // Apply new position
+                // We must override the CSS transform used for centering
+                noBtn.style.transform = "none"; 
+                noBtn.style.left = `${randomX}px`;
+                noBtn.style.top = `${randomY}px`;
+                noBtn.style.bottom = "auto";
+
+                // 2. Grow YES Button Logic
+                yesScale += 0.15; // Grow by 15% each time
+                yesBtn.style.transform = `translateX(-160%) scale(${yesScale})`;
+
+                // 3. Change Text
+                const texts = ["No!", "Try again!", "Too slow!", "Impossible!", "Click Yes!"];
+                noBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+                noBtn.style.backgroundColor = "#ffe4e6";
+            }
+        };
+
+        // Desktop
+        mainCard.addEventListener('mousemove', (e) => {
+            moveNoButton(e.clientX, e.clientY);
+        });
+
+        // Mobile
+        noBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Simulate mouse at button center to trigger move
+            const rect = noBtn.getBoundingClientRect();
+            moveNoButton(rect.left + rect.width/2, rect.top + rect.height/2);
+        });
+        
+        // Fail-safe Click
+        noBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert("Oops! You missed. Try the other button 😉");
+        });
+
+        /* --- Logic 4: Celebration --- */
+        const celebration = document.getElementById('celebration');
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+
+        yesBtn.addEventListener('click', () => {
+            mainCard.classList.add('hidden');
+            celebration.classList.remove('hidden');
+            startConfetti();
+        });
+
+        function startConfetti() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let particles = [];
+            const colors = ['#ff416c', '#ff4b2b', '#ffffff', '#e11d48', '#FFD700'];
+
+            for (let i = 0; i < 200; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    speed: Math.random() * 5 + 3,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    oscillation: Math.random() * 20, // Side to side movement
+                    step: 0
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.fillStyle = p.color;
+                    // Add oscillation for falling leaf effect
+                    p.step += 0.05;
+                    const xOff = Math.cos(p.step) * 2;
+                    
+                    ctx.fillRect(p.x + xOff, p.y, p.size, p.size);
+                    p.y += p.speed;
+                    
+                    if (p.y > canvas.height) {
+                        p.y = -10;
+                        p.x = Math.random() * canvas.width;
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    </script>
+</body>
+</html>
